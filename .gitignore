@@ -1,0 +1,31 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output
+/bin/
+/dist/
+
+# Test output
+*.test
+*.out
+
+# Environment files
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# Coverage
+coverage.out
