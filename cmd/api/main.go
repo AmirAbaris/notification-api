@@ -1,12 +1,21 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/AmirAbaris/notification-api/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("no .env file found")
+	}
+
+	_ = config.NewConfig()
 	// Create a Gin router with default middleware (logger and recovery)
 	r := gin.Default()
 
