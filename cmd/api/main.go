@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/AmirAbaris/notification-api/internal/config"
+	"github.com/AmirAbaris/notification-api/internal/db"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -15,7 +17,18 @@ func main() {
 		log.Println("no .env file found")
 	}
 
-	_ = config.NewConfig()
+	cfg := config.NewConfig()
+
+	pool, err := db.NewPool(cfg.DBUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
+	if err := pool.Ping(context.Background()); err != nil {
+		log.Fatal(err)
+	}
+
 	// Create a Gin router with default middleware (logger and recovery)
 	r := gin.Default()
 
@@ -27,7 +40,5 @@ func main() {
 		})
 	})
 
-	// Start server on port 8080 (default)
-	// Server will listen on 0.0.0.0:8080 (localhost:8080 on Windows)
-	r.Run()
+	r.Run(":" + cfg.Port)
 }
