@@ -8,10 +8,10 @@ import (
 )
 
 type TemplateHandler struct {
-	templateService TemplateService
+	templateService *TemplateService
 }
 
-func NewTemplateHandler(s TemplateService) *TemplateHandler {
+func NewTemplateHandler(s *TemplateService) *TemplateHandler {
 	return &TemplateHandler{templateService: s}
 }
 
