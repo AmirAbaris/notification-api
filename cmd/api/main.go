@@ -40,6 +40,7 @@ func main() {
 
 	r.GET("/health", healthHandler.GetHealth)
 	r.POST("/users", userHandler.Create)
+	r.GET("/users/:id", userHandler.Get)
 
 	r.Run(":" + cfg.Port)
 }

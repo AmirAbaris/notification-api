@@ -44,3 +44,25 @@ func (r *UserRepository) Create(ctx context.Context, email, name string) (User, 
 
 	return user, nil
 }
+
+func (r *UserRepository) Get(ctx context.Context, userId uuid.UUID) (User, error) {
+	var user User
+	err := r.db.QueryRow(ctx, `
+	SELECT *
+	FROM users
+	WHERE id = $1
+	`,
+		userId,
+	).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Name,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	return user, nil
+}
