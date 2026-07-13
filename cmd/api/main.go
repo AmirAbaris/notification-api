@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 
 	"github.com/AmirAbaris/notification-api/internal/config"
 	"github.com/AmirAbaris/notification-api/internal/db"
+	"github.com/AmirAbaris/notification-api/internal/health"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -29,16 +29,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	healthHandler := health.NewHandler()
+
 	// Create a Gin router with default middleware (logger and recovery)
 	r := gin.Default()
 
-	// Define a simple GET endpoint
-	r.GET("/ping", func(c *gin.Context) {
-		// Return JSON response
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	r.GET("/health", healthHandler.GetHealth)
 
 	r.Run(":" + cfg.Port)
 }
