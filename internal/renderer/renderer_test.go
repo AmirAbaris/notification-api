@@ -10,11 +10,9 @@ func TestRender(t *testing.T) {
 
 	data := make(map[string]string)
 	data["name"] = "amir"
+	data["count"] = "three"
 
-	result, err := Render(got, data)
-	if err != nil || result == "" {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	result := Render(got, data)
 
 	if want != result {
 		t.Fatalf("got %q, want %q", result, want)
