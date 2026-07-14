@@ -30,7 +30,7 @@ func (r *NotificationRepository) Create(ctx context.Context, userID, templateID 
 
 	err := r.db.QueryRow(ctx, `
 	INSERT INTO notifications (user_id, template_id, data, status)
-	VALUES($1, $2, $3)
+	VALUES($1, $2, $3, $4)
 	RETURNING id, user_id, template_id, status, created_at;
 	`,
 		userID,
@@ -141,4 +141,69 @@ func (r *NotificationRepository) UpdateToSent(ctx context.Context, notificationI
 	}
 
 	return notification, nil
+}
+
+func (r *NotificationRepository) ClaimPending(ctx context.Context, limit int) ([]Notification, error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	rows, err := r.db.Query(ctx, `
+	SELECT id, user_id, template_id, data, status, created_at
+	FROM notifications
+	WHERE status = 'pending'
+	FOR UPDATE SKIP LOCKED
+	LIMIT $1
+	`,
+		limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	var notifications []Notification
+
+	for rows.Next() {
+		var notification Notification
+
+		err := rows.Scan(
+			&notification.ID,
+			&notification.UserID,
+			&notification.TemplateID,
+			&notification.Data,
+			&notification.Status,
+			&notification.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		notifications = append(notifications, notification)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Claim them
+	for _, notif := range notifications {
+		_, err = tx.Exec(ctx, `
+				UPDATE notifications
+				SET status = 'processing'
+				WHERE id = $1
+			`,
+			notif.ID,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return notifications, nil
 }

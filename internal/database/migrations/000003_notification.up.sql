@@ -1,7 +1,8 @@
 CREATE TYPE status AS ENUM (
     'pending',
     'sent',
-    'failed'
+    'failed',
+    'processing'
 );
 
 CREATE TABLE notifications(
