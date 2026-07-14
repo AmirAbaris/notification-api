@@ -14,8 +14,8 @@ func NewNotificationService(r *NotificationRepository) *NotificationService {
 	return &NotificationService{repo: r}
 }
 
-func (s *NotificationService) Create(ctx context.Context, userID, templateID uuid.UUID, status string) (Notification, error) {
-	notification, err := s.repo.Create(ctx, userID, templateID, status)
+func (s *NotificationService) Create(ctx context.Context, userID, templateID uuid.UUID, data map[string]string, status string) (Notification, error) {
+	notification, err := s.repo.Create(ctx, userID, templateID, data, status)
 	if err != nil {
 		return Notification{}, err
 	}

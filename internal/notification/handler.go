@@ -17,9 +17,10 @@ func NewNotificationHandler(s *NotificationService) *NotificationHandler {
 
 func (h *NotificationHandler) Create(c *gin.Context) {
 	var body struct {
-		UserID     uuid.UUID `json:"user_id"`
-		TemplateID uuid.UUID `json:"template_id"`
-		Status     string    `json:"status"`
+		UserID     uuid.UUID         `json:"user_id"`
+		TemplateID uuid.UUID         `json:"template_id"`
+		Data       map[string]string `json:"data"`
+		Status     string            `json:"status"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -33,6 +34,7 @@ func (h *NotificationHandler) Create(c *gin.Context) {
 		c.Request.Context(),
 		body.UserID,
 		body.TemplateID,
+		body.Data,
 		body.Status,
 	)
 

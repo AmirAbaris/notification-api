@@ -6,9 +6,11 @@ CREATE TYPE status AS ENUM (
 
 CREATE TABLE notifications(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL
-    template_id UUID NOT NULL
-    status status NOT NULL DEFAULT 'pending'
+    user_id UUID NOT NULL,
+    template_id UUID NOT NULL,
+    data JSONB NOT NULL,
+    status status NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (user_id)
         REFRENCES users(id)

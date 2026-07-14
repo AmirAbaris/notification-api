@@ -13,22 +13,23 @@ type NotificationRepository struct {
 }
 
 type Notification struct {
-	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"user_id"`
-	TemplateID uuid.UUID `json:"template_id"`
-	Status     string    `json:"status"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID         uuid.UUID         `json:"id"`
+	UserID     uuid.UUID         `json:"user_id"`
+	TemplateID uuid.UUID         `json:"template_id"`
+	Data       map[string]string `json:"data"`
+	Status     string            `json:"status"`
+	CreatedAt  time.Time         `json:"created_at"`
 }
 
 func NewNotificationRepository(db *pgxpool.Pool) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
-func (r *NotificationRepository) Create(ctx context.Context, userID, templateID uuid.UUID, status string) (Notification, error) {
+func (r *NotificationRepository) Create(ctx context.Context, userID, templateID uuid.UUID, data map[string]string, status string) (Notification, error) {
 	var notification Notification
 
 	err := r.db.QueryRow(ctx, `
-	INSERT INTO notifications (user_id, template_id, status)
+	INSERT INTO notifications (user_id, template_id, data, status)
 	VALUES($1, $2, $3)
 	RETURNING id, user_id, template_id, status, created_at;
 	`,
@@ -54,7 +55,7 @@ func (r *NotificationRepository) Get(ctx context.Context, notificationID uuid.UU
 	var notification Notification
 
 	err := r.db.QueryRow(ctx, `
-	SELECT id, user_id, template_id, status, created_at
+	SELECT id, user_id, template_id, data, status, created_at
 	FROM notifications
 	WHERE id = $1
 	`,
@@ -63,6 +64,74 @@ func (r *NotificationRepository) Get(ctx context.Context, notificationID uuid.UU
 		&notification.ID,
 		&notification.UserID,
 		&notification.TemplateID,
+		&notification.Data,
+		&notification.Status,
+		&notification.CreatedAt,
+	)
+
+	if err != nil {
+		return Notification{}, err
+	}
+
+	return notification, nil
+}
+
+func (r *NotificationRepository) GetPendings(ctx context.Context, limit int) ([]Notification, error) {
+	rows, err := r.db.Query(ctx, `
+	SELECT id, user_id, template_id, data, status, created_at
+	FROM notifications
+	WHERE status = 'pending'
+	LIMIT $1
+	`,
+		limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	var notifications []Notification
+
+	for rows.Next() {
+		var notification Notification
+
+		err := rows.Scan(
+			&notification.ID,
+			&notification.UserID,
+			&notification.TemplateID,
+			&notification.Data,
+			&notification.Status,
+			&notification.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		notifications = append(notifications, notification)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return notifications, nil
+}
+
+func (r *NotificationRepository) UpdateToSent(ctx context.Context, notificationID uuid.UUID) (Notification, error) {
+	var notification Notification
+
+	err := r.db.QueryRow(ctx, `
+	UPDATE notifications
+	SET status = 'sent'
+	WHERE id = $1
+	RETURNING id, user_id, template_id, data, status, created_at;
+	`,
+		notificationID,
+	).Scan(
+		&notification.ID,
+		&notification.UserID,
+		&notification.TemplateID,
+		&notification.Data,
 		&notification.Status,
 		&notification.CreatedAt,
 	)
