@@ -1,4 +1,4 @@
-package worker
+package main
 
 import (
 	"context"
@@ -11,6 +11,8 @@ import (
 	"github.com/AmirAbaris/notification-api/internal/config"
 	"github.com/AmirAbaris/notification-api/internal/db"
 	"github.com/AmirAbaris/notification-api/internal/notification"
+	"github.com/AmirAbaris/notification-api/internal/queue"
+	"github.com/AmirAbaris/notification-api/internal/redis"
 	"github.com/AmirAbaris/notification-api/internal/template"
 	"github.com/joho/godotenv"
 )
@@ -33,11 +35,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	redisClient := redis.NewClient(cfg.RedisUrl)
+	queue := queue.NewQueue(redisClient)
+
 	notificationRepository := notification.NewNotificationRepository(pool)
 
 	templateRepository := template.NewTemplateRepository(pool)
 	templateService := template.NewTemplateService(templateRepository)
-	worker := NewWorker(notificationRepository, templateService)
+	worker := NewWorker(queue, notificationRepository, templateService)
 
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -47,15 +52,15 @@ func main() {
 
 	for {
 		select {
-		case <-ticker.C:
+		case <-ctx.Done():
+			fmt.Println("all workers done")
+			return
+
+		default:
 			err := worker.Process(ctx)
 			if err != nil {
 				log.Println(err)
 			}
-
-		case <-ctx.Done():
-			fmt.Println("all workers done")
-			return
 		}
 	}
 }

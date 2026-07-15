@@ -14,10 +14,10 @@ CREATE TABLE notifications(
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (user_id)
-        REFRENCES users(id)
-        ON DELETE CASCADE
+        REFERENCES users(id)
+        ON DELETE CASCADE,
 
     FOREIGN KEY (template_id)
-        REFRENCES templates(id)
+        REFERENCES templates(id)
         ON DELETE CASCADE
 );

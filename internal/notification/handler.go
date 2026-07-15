@@ -20,7 +20,6 @@ func (h *NotificationHandler) Create(c *gin.Context) {
 		UserID     uuid.UUID         `json:"user_id"`
 		TemplateID uuid.UUID         `json:"template_id"`
 		Data       map[string]string `json:"data"`
-		Status     string            `json:"status"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -35,7 +34,6 @@ func (h *NotificationHandler) Create(c *gin.Context) {
 		body.UserID,
 		body.TemplateID,
 		body.Data,
-		body.Status,
 	)
 
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/AmirAbaris/notification-api/internal/db"
 	"github.com/AmirAbaris/notification-api/internal/health"
 	"github.com/AmirAbaris/notification-api/internal/notification"
+	"github.com/AmirAbaris/notification-api/internal/queue"
 	"github.com/AmirAbaris/notification-api/internal/redis"
 	"github.com/AmirAbaris/notification-api/internal/template"
 	"github.com/AmirAbaris/notification-api/internal/user"
@@ -33,7 +34,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_ = redis.NewClient(cfg.RedisUrl)
+	redisClient := redis.NewClient(cfg.RedisUrl)
+	queue := queue.NewQueue(redisClient)
 
 	healthHandler := health.NewHandler()
 
@@ -46,7 +48,7 @@ func main() {
 	templateHandler := template.NewTemplateHandler(templateService)
 
 	notificationRepository := notification.NewNotificationRepository(pool)
-	notificationService := notification.NewNotificationService(notificationRepository)
+	notificationService := notification.NewNotificationService(notificationRepository, queue)
 	notificationHandler := notification.NewNotificationHandler(notificationService)
 
 	// Create a Gin router with default middleware (logger and recovery)

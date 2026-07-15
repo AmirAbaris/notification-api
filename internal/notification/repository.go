@@ -25,22 +25,23 @@ func NewNotificationRepository(db *pgxpool.Pool) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
-func (r *NotificationRepository) Create(ctx context.Context, userID, templateID uuid.UUID, data map[string]string, status string) (Notification, error) {
+func (r *NotificationRepository) Create(ctx context.Context, userID, templateID uuid.UUID, data map[string]string) (Notification, error) {
 	var notification Notification
 
 	err := r.db.QueryRow(ctx, `
-	INSERT INTO notifications (user_id, template_id, data, status)
-	VALUES($1, $2, $3, $4)
-	RETURNING id, user_id, template_id, status, created_at;
+	INSERT INTO notifications (user_id, template_id, data)
+	VALUES($1, $2, $3)
+	RETURNING id, user_id, template_id, status, data, created_at;
 	`,
 		userID,
 		templateID,
-		status,
+		data,
 	).Scan(
 		&notification.ID,
 		&notification.UserID,
 		&notification.TemplateID,
 		&notification.Status,
+		&notification.Data,
 		&notification.CreatedAt,
 	)
 
