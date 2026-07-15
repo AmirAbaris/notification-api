@@ -58,9 +58,11 @@ func main() {
 
 		default:
 			err := worker.Process(ctx)
-			if err != nil {
-				log.Println(err)
+			if ctx.Err() != nil {
+				fmt.Println("worker shutting down")
+				return
 			}
+			log.Println(err)
 		}
 	}
 }
