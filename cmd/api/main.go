@@ -8,6 +8,7 @@ import (
 	"github.com/AmirAbaris/notification-api/internal/db"
 	"github.com/AmirAbaris/notification-api/internal/health"
 	"github.com/AmirAbaris/notification-api/internal/notification"
+	"github.com/AmirAbaris/notification-api/internal/redis"
 	"github.com/AmirAbaris/notification-api/internal/template"
 	"github.com/AmirAbaris/notification-api/internal/user"
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,8 @@ func main() {
 	if err := pool.Ping(context.Background()); err != nil {
 		log.Fatal(err)
 	}
+
+	_ = redis.NewClient(cfg.RedisUrl)
 
 	healthHandler := health.NewHandler()
 
